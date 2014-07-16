@@ -12,7 +12,7 @@ $plugin_info = array(
 class Metagrab {
     public $return_data = '';
     private $ee;
-    private $debug = false;
+    private $debug;
 
     public function __construct() {
         $this->ee = function_exists('ee') ? ee() : get_instance();
@@ -27,53 +27,52 @@ class Metagrab {
             $this->give_up('The "attribute" parameter must be one: title, description and keywords.');
         }
 
-        $default = $this->ee->TMPL->fetch_param('default');
+        $default = $this->ee->TMPL->fetch_param('default', '');
 
         $this->debug = $this->is_truthy($this->ee->TMPL->fetch_param('debug'));
         $this->log("From tag: entry_id=$entry_id, attribute=$attribute, default=$default");
 
+        // derive attribute value from NSM Better Meta entry
         $sql = "SELECT $attribute FROM exp_nsm_better_meta WHERE entry_id = ? LIMIT 1";
         $query = $this->ee->db->query($sql, array($entry_id));
         $value = '';
 
-        if ($query->num_rows() == 1) {
+        if ($query->num_rows() > 0) {
             $value = $query->row($attribute);
-            $this->log("From NSM default: entry_id=$entry_id, $attribute=$value");
+            $this->log("From NSM: entry_id=$entry_id, $attribute=$value");
         }
 
-
         if (empty($value)) {
+            // fall back to NSM Better Meta default setting
             include(PATH_THIRD. 'nsm_better_meta/ext.nsm_better_meta.php');
+
             $nsm_extension = new Nsm_better_meta_ext;
             $value = $nsm_extension->settings['default_site_meta'][$attribute];
-            $this->log("From NSM default: entry_id=$entry_id, $attribute=$value");
-        }
 
-        $this->log("From NSM: entry_id=$entry_id, $attribute=$value");
+            $this->log("From NSM default: $attribute=$value");
+        }
 
         if (empty($value)) {
+            // fall back to tag default
             $value = $default;
-            $this->log("From tag default: entry_id=$entry_id, $attribute=$value");
-        }
 
-        $this->log("Returning: entry_id=$entry_id, $attribute=$value");
+            $this->log("From tag default: $attribute=$value");
+        }
 
         $this->return_data = $value;
     }
 
     private function give_up($string) {
-        $this->ee->output->fatal_error(__CLASS__." $string");
+        $this->ee->output->fatal_error(__CLASS__.": $string");
     }
 
     private function is_truthy($value) {
-        $truthy_values = array('on', 'true', 'yes', '1');
-
-        return in_array(strtolower($value), $truthy_values);
+        return in_array(strtolower($value), array('on', 'true', 'yes', '1'));
     }
 
     private function log($string) {
         if ($this->debug) {
-            $this->ee->TMPL->log_item(__CLASS__." $string");
+            $this->ee->TMPL->log_item(__CLASS__.": $string");
         }
     }
 
@@ -83,7 +82,11 @@ class Metagrab {
 
 {exp:channel:entries limit='1'}
 
-    {exp:metagrab entry_id='{entry_id}' default='{title}'}
+    {exp:metagrab entry_id='{entry_id}' attribute='title' default='{title}'}
+
+    {exp:metagrab entry_id='{entry_id}' attribute='description' default='My Enchanting Description'}
+
+    {exp:metagrab entry_id='{entry_id}' attribute='keywords' default='foo bar'}
 
 {/exp:channel:entries}
 
