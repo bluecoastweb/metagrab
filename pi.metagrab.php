@@ -44,22 +44,26 @@ class Metagrab {
 
         if (empty($value)) {
             // fall back to NSM Better Meta default setting
-            include(PATH_THIRD. 'nsm_better_meta/ext.nsm_better_meta.php');
-
-            $nsm_extension = new Nsm_better_meta_ext;
-            $value = $nsm_extension->settings['default_site_meta'][$attribute];
-
+            $value = $this->nsm_default($attribute);
             $this->log("From NSM default: $attribute=$value");
         }
 
         if (empty($value)) {
             // fall back to tag default
             $value = $default;
-
             $this->log("From tag default: $attribute=$value");
         }
 
         $this->return_data = $value;
+    }
+
+    private function nsm_default($attribute) {
+        if (! class_exists('Nsm_better_meta_ext')) {
+            include(PATH_THIRD. 'nsm_better_meta/ext.nsm_better_meta.php');
+        }
+
+        $nsm_extension = new Nsm_better_meta_ext;
+        return $nsm_extension->settings['default_site_meta'][$attribute == 'title' ? 'site_title' : $attribute];
     }
 
     private function give_up($string) {
