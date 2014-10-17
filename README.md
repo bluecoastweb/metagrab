@@ -12,7 +12,7 @@ For a given channel entry id, grab one of the following NSM Better Meta attribut
 
 and fall back to a given default value if nothing turns up.
 
-### For example
+### In gory detail
 
     {exp:channel:entries}
 
@@ -40,3 +40,10 @@ and fall back to a given default value if nothing turns up.
 
     {/exp:switchee}
 
+### Things not working out as expected?
+
+Use the debug, Luke:
+
+    {exp:metagrab entry_id='{structure:page:entry_id}' attribute='canonical_url' default='{current_url}' debug='yes'}
+
+and watch turn on Template Debugging.
