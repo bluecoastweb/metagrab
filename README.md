@@ -31,10 +31,12 @@ and fall back to a given default value if nothing turns up.
     {exp:switchee variable='{structure:page:entry_id}' parse='inward'}
 
     {case value=''}
+         <!-- no entry id...this is probably your home page or some such -->
          <link rel="canonical" href="{current_url}">
       {/case}
 
       {case default='yes'}
+          <!-- entry id exists, so use it find a canonical_url from NSM Better Meta and fall back to the current URL if not explicitly set -->
          <link rel="canonical" href="{exp:metagrab entry_id='{structure:page:entry_id}' attribute='canonical_url' default='{current_url}'}">
       {/case}
 
@@ -46,4 +48,4 @@ Use the debug, Luke:
 
     {exp:metagrab entry_id='{structure:page:entry_id}' attribute='canonical_url' default='{current_url}' debug='yes'}
 
-and watch turn on Template Debugging.
+and toggle on Template Debugging.
